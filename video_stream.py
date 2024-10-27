@@ -4,7 +4,7 @@ import cv2
 background_image = cv2.imread('assets/class_background.png', 1)
 
 cap0 = cv2.VideoCapture(0)
-cap1 = cv2.VideoCapture('rtsp://admin:Gaura108@192.168.1.88/11')
+cap1 = cv2.VideoCapture('rtsp://admin:Gaura108@192.168.86.215/11')
 
 while True:
 

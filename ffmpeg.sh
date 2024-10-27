@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RTSP_URL="rtsp://admin:Gaura108@192.168.1.88:554/11"
+RTSP_URL="rtsp://admin:Gaura108@192.168.86.215:554/11"
 YOUTUBE_URL="rtmp://a.rtmp.youtube.com/live2"
 YOUTUBE_KEY="74vx-xdv7-fxth-7wrr-7dcf"
 
