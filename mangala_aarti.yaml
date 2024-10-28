@@ -1,0 +1,10 @@
+steps:
+  - mode: 'dual_view'
+    duration: 5
+    loops: 2
+  - mode: 'fullscreen_0'
+    duration: 3
+    loops: 1
+  - mode: 'fullscreen_1'
+    duration: 3
+    loops: 2
