@@ -1,6 +1,6 @@
 background_image: 'assets/class_background.png'
 sources:
-  - url: 0  # Local camera
+  - url: '0'  # Local camera
   - url: 'rtsp://admin:Gaura108@192.168.86.215/11'  # RTSP stream
 
 modes:
@@ -8,13 +8,13 @@ modes:
     type: 'dual'
     pos0: [854, 480]
     pos1: [0, 0]
-    size0: [320, 240]
-    size1: [160, 120]
+    scale0: 50  # Scale as a percentage
+    scale1: 25  # Scale as a percentage
   fullscreen_0:
     type: 'fullscreen_0'
     pos: [0, 0]
-    size: [1280, 720]
+    scale: 100  # Full screen
   fullscreen_1:
     type: 'fullscreen_1'
     pos: [0, 0]
-    size: [1280, 720]
+    scale: 100  # Full screen

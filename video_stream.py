@@ -19,22 +19,24 @@ def get_current_orchestration(schedule, time_now):
             return item['orchestration_file']
     return None
 
-def resize_frame(frame, target_width, target_height):
-    """Resize the frame to a target width and height."""
-    return cv2.resize(frame, (target_width, target_height), interpolation=cv2.INTER_AREA)
+def resize_frame(frame, scale_percent):
+    """Resize frame by a percentage, maintaining aspect ratio."""
+    width = int(frame.shape[1] * scale_percent / 100)
+    height = int(frame.shape[0] * scale_percent / 100)
+    return cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
 
-def dual_capture_display(background, frame0, frame1, pos0, pos1, size0, size1):
-    """Display both captures in specified positions and sizes."""
-    frame0_resized = resize_frame(frame0, *size0)
-    frame1_resized = resize_frame(frame1, *size1)
-    background[pos0[1]:pos0[1]+size0[1], pos0[0]:pos0[0]+size0[0]] = frame0_resized
-    background[pos1[1]:pos1[1]+size1[1], pos1[0]:pos1[0]+size1[0]] = frame1_resized
+def dual_capture_display(background, frame0, frame1, pos0, pos1, scale0, scale1):
+    """Display both captures in specified positions and scales."""
+    frame0_resized = resize_frame(frame0, scale0)
+    frame1_resized = resize_frame(frame1, scale1)
+    background[pos0[1]:pos0[1]+frame0_resized.shape[0], pos0[0]:pos0[0]+frame0_resized.shape[1]] = frame0_resized
+    background[pos1[1]:pos1[1]+frame1_resized.shape[0], pos1[0]:pos1[0]+frame1_resized.shape[1]] = frame1_resized
     return background
 
-def fullscreen_display(background, frame, pos, size):
-    """Display a single capture full-screen or in specified position and size."""
-    frame_resized = resize_frame(frame, *size)
-    background[pos[1]:pos[1]+size[1], pos[0]:pos[0]+size[0]] = frame_resized
+def fullscreen_display(background, frame, pos, scale):
+    """Display a single capture full-screen or in specified position and scale."""
+    frame_resized = resize_frame(frame, scale)
+    background[pos[1]:pos[1]+frame_resized.shape[0], pos[0]:pos[0]+frame_resized.shape[1]] = frame_resized
     return background
 
 def main(mode_config_file='mode_config.yaml', schedule_file='schedule.yaml'):
@@ -94,19 +96,19 @@ def main(mode_config_file='mode_config.yaml', schedule_file='schedule.yaml'):
             if mode_settings['type'] == 'dual':
                 pos0 = tuple(mode_settings['pos0'])
                 pos1 = tuple(mode_settings['pos1'])
-                size0 = tuple(mode_settings['size0'])
-                size1 = tuple(mode_settings['size1'])
-                display_frame = dual_capture_display(display_frame, frame0, frame1, pos0, pos1, size0, size1)
+                scale0 = mode_settings['scale0']  # Percentage
+                scale1 = mode_settings['scale1']  # Percentage
+                display_frame = dual_capture_display(display_frame, frame0, frame1, pos0, pos1, scale0, scale1)
             
             elif mode_settings['type'] == 'fullscreen_0':
                 pos = tuple(mode_settings['pos'])
-                size = tuple(mode_settings['size'])
-                display_frame = fullscreen_display(display_frame, frame0, pos, size)
+                scale = mode_settings['scale']  # Percentage
+                display_frame = fullscreen_display(display_frame, frame0, pos, scale)
             
             elif mode_settings['type'] == 'fullscreen_1':
                 pos = tuple(mode_settings['pos'])
-                size = tuple(mode_settings['size'])
-                display_frame = fullscreen_display(display_frame, frame1, pos, size)
+                scale = mode_settings['scale']  # Percentage
+                display_frame = fullscreen_display(display_frame, frame1, pos, scale)
 
             cv2.imshow('Display', display_frame)
 
