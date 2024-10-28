@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import time
 import yaml
-from datetime import datetime, time as dt_time
+from datetime import datetime
 import argparse
 
 def load_config(file_path):
@@ -20,27 +20,52 @@ def get_current_orchestration(schedule, time_now):
             return item['orchestration_file']
     return None
 
-def resize_frame(frame, scale_percent):
-    """Resize frame by a percentage, maintaining aspect ratio."""
-    width = int(frame.shape[1] * scale_percent / 100)
-    height = int(frame.shape[0] * scale_percent / 100)
-    return cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
+def resize_frame_to_fit(frame, width, height):
+    """Resize frame to fit specified width and height, maintaining aspect ratio."""
+    original_height, original_width = frame.shape[:2]
+    scaling_factor = min(width / original_width, height / original_height)
+    new_width = int(original_width * scaling_factor)
+    new_height = int(original_height * scaling_factor)
+    return cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 def dual_capture_display(background, frame0, frame1, pos0, pos1, scale0, scale1):
     """Display both captures in specified positions and scales."""
-    frame0_resized = resize_frame(frame0, scale0)
-    frame1_resized = resize_frame(frame1, scale1)
-    background[pos0[1]:pos0[1]+frame0_resized.shape[0], pos0[0]:pos0[0]+frame0_resized.shape[1]] = frame0_resized
-    background[pos1[1]:pos1[1]+frame1_resized.shape[0], pos1[0]:pos1[0]+frame1_resized.shape[1]] = frame1_resized
+    # Calculate target dimensions based on background and scale
+    h0, w0 = background.shape[:2]
+    target_width0 = int(w0 * scale0 / 100)
+    target_height0 = int(h0 * scale0 / 100)
+    target_width1 = int(w0 * scale1 / 100)
+    target_height1 = int(h0 * scale1 / 100)
+
+    # Resize frames to calculated dimensions
+    frame0_resized = resize_frame_to_fit(frame0, target_width0, target_height0)
+    frame1_resized = resize_frame_to_fit(frame1, target_width1, target_height1)
+
+    # Get resized frame dimensions
+    h0_resized, w0_resized = frame0_resized.shape[:2]
+    h1_resized, w1_resized = frame1_resized.shape[:2]
+
+    # Ensure frames fit within designated positions on the background
+    background[pos0[1]:pos0[1] + h0_resized, pos0[0]:pos0[0] + w0_resized] = frame0_resized
+    background[pos1[1]:pos1[1] + h1_resized, pos1[0]:pos1[0] + w1_resized] = frame1_resized
     return background
 
 def fullscreen_display(background, frame, pos, scale):
     """Display a single capture full-screen or in specified position and scale."""
-    frame_resized = resize_frame(frame, scale)
-    background[pos[1]:pos[1]+frame_resized.shape[0], pos[0]:pos[0]+frame_resized.shape[1]] = frame_resized
+    # Calculate target dimensions based on background and scale
+    h, w = background.shape[:2]
+    target_width = int(w * scale / 100)
+    target_height = int(h * scale / 100)
+
+    # Resize frame to calculated dimensions
+    frame_resized = resize_frame_to_fit(frame, target_width, target_height)
+
+    # Place resized frame on background at specified position
+    h_resized, w_resized = frame_resized.shape[:2]
+    background[pos[1]:pos[1] + h_resized, pos[0]:pos[0] + w_resized] = frame_resized
     return background
 
-def main(mode_config_file='mode_config.yaml', schedule_file='schedule.yaml', debug_time=None):
+def main(mode_config_file='mode_config.yaml', schedule_file='temple_schedule.yaml', debug_time=None):
     # Load configurations
     mode_config = load_config(mode_config_file)
     schedule = load_config(schedule_file)

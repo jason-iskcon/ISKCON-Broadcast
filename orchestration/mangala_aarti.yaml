@@ -1,5 +1,5 @@
 steps:
-  - mode: 'dual_view'
+  - mode: 'dual_1_topleft'
     duration: 5
     loops: 2
   - mode: 'fullscreen_0'
