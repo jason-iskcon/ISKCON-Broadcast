@@ -2,12 +2,22 @@ import cv2
 import numpy as np
 import time
 import yaml
+from datetime import datetime
 
 def load_config(file_path):
     """Load YAML configuration file."""
     with open(file_path, 'r') as file:
         config = yaml.safe_load(file)
     return config
+
+def get_current_orchestration(schedule, time_now):
+    """Get the appropriate orchestration based on the current time."""
+    for item in schedule:
+        start_time = datetime.strptime(item['start'], "%H:%M").time()
+        end_time = datetime.strptime(item['end'], "%H:%M").time()
+        if start_time <= time_now < end_time:
+            return item['orchestration_file']
+    return None
 
 def resize_frame(frame, target_width, target_height):
     """Resize the frame to a target width and height."""
@@ -27,22 +37,35 @@ def fullscreen_display(background, frame, pos, size):
     background[pos[1]:pos[1]+size[1], pos[0]:pos[0]+size[0]] = frame_resized
     return background
 
-def main(mode_config_file='mode_config.yaml', orchestration_file='orchestration.yaml'):
+def main(mode_config_file='mode_config.yaml', schedule_file='schedule.yaml'):
     # Load configurations
     mode_config = load_config(mode_config_file)
-    orchestration = load_config(orchestration_file)
+    schedule = load_config(schedule_file)
     
     # Load background image and video captures
     background_image = cv2.imread(mode_config['background_image'], 1)
     cap0 = cv2.VideoCapture(mode_config['sources'][0]['url'])
     cap1 = cv2.VideoCapture(mode_config['sources'][1]['url'])
-    
+
     current_step = 0
     start_time = time.time()
+    orchestration_config = None
 
     while True:
+        # Update orchestration based on time of day
+        time_now = datetime.now().time()
+        orchestration_file = get_current_orchestration(schedule, time_now)
+        if orchestration_file and (orchestration_config is None or orchestration_file != orchestration_config.get('file')):
+            orchestration_config = load_config(orchestration_file)
+            orchestration_config['file'] = orchestration_file  # Track the current file
+
+        # Exit if no valid orchestration for current time
+        if orchestration_config is None:
+            print("No orchestration defined for current time.")
+            break
+        
         # Get current orchestration step
-        step = orchestration['steps'][current_step]
+        step = orchestration_config['steps'][current_step]
         mode_name = step['mode']
         duration = step['duration']
         loop_count = step.get('loops', 1)
@@ -61,7 +84,7 @@ def main(mode_config_file='mode_config.yaml', orchestration_file='orchestration.
             # Switch to the next mode after the duration
             if elapsed_time > duration:
                 start_time = time.time()
-                current_step = (current_step + 1) % len(orchestration['steps'])
+                current_step = (current_step + 1) % len(orchestration_config['steps'])
 
             # Clear the background for each frame
             display_frame = background_image.copy()
