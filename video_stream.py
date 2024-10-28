@@ -2,7 +2,8 @@ import cv2
 import numpy as np
 import time
 import yaml
-from datetime import datetime
+from datetime import datetime, time as dt_time
+import argparse
 
 def load_config(file_path):
     """Load YAML configuration file."""
@@ -11,7 +12,7 @@ def load_config(file_path):
     return config
 
 def get_current_orchestration(schedule, time_now):
-    """Get the appropriate orchestration based on the current time."""
+    """Get the appropriate orchestration based on the current or debug time."""
     for item in schedule:
         start_time = datetime.strptime(item['start'], "%H:%M").time()
         end_time = datetime.strptime(item['end'], "%H:%M").time()
@@ -39,7 +40,7 @@ def fullscreen_display(background, frame, pos, scale):
     background[pos[1]:pos[1]+frame_resized.shape[0], pos[0]:pos[0]+frame_resized.shape[1]] = frame_resized
     return background
 
-def main(mode_config_file='mode_config.yaml', schedule_file='schedule.yaml'):
+def main(mode_config_file='mode_config.yaml', schedule_file='schedule.yaml', debug_time=None):
     # Load configurations
     mode_config = load_config(mode_config_file)
     schedule = load_config(schedule_file)
@@ -54,8 +55,9 @@ def main(mode_config_file='mode_config.yaml', schedule_file='schedule.yaml'):
     orchestration_config = None
 
     while True:
-        # Update orchestration based on time of day
-        time_now = datetime.now().time()
+        # Determine current or debug time for orchestration selection
+        time_now = debug_time if debug_time else datetime.now().time()
+        
         orchestration_file = get_current_orchestration(schedule, time_now)
         if orchestration_file and (orchestration_config is None or orchestration_file != orchestration_config.get('file')):
             orchestration_config = load_config(orchestration_file)
@@ -122,4 +124,16 @@ def main(mode_config_file='mode_config.yaml', schedule_file='schedule.yaml'):
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='Run the video orchestration with optional debug time.')
+    parser.add_argument('--debug-time', type=str, help="Specify a debug time in HH:MM format to test a specific schedule.")
+    args = parser.parse_args()
+
+    debug_time = None
+    if args.debug_time:
+        try:
+            debug_time = datetime.strptime(args.debug_time, "%H:%M").time()
+            print(f"Debug mode activated. Testing schedule at {debug_time}.")
+        except ValueError:
+            print("Invalid time format for --debug-time. Please use HH:MM.")
+    
+    main(debug_time=debug_time)
