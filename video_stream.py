@@ -5,6 +5,7 @@ import yaml
 from datetime import datetime
 import argparse
 import requests
+import threading
 
 CAMERA_IP = "192.168.87.76"
 USERNAME = "admin"
@@ -48,9 +49,66 @@ def set_ptz_preset(token, session, marker_id):
         print("Failed to move camera to marker")
 
 # Camera movement
+def send_ptz_command(token, session, command, parameter, speed=32, id=0):
+    """Send a PTZ command to the camera with specified parameters."""
+    url = f"{BASE_URL}?cmd={command}&token={token}"
+
+    if command == "PtzCtrl":
+        if parameter in ["Left", "Right", "Up", "Down", "ZoomInc", "ZoomDec"]:
+            payload = [{"cmd": command, "action": 0, "param": {"channel": 0, "op": parameter, "speed": speed}}]
+        elif parameter == "Stop":
+            payload = [{"cmd": command, "action": 0, "param": {"channel": 0, "op": "Stop"}}]
+        elif parameter == "ToPos" and id > 0:
+            payload = [{"cmd": command, "action": 0, "param": {"channel": 0, "id": id, "op": parameter, "speed": speed}}]
+        else:
+            print(f"Invalid parameter for command {command}")
+            return
+    else:
+        print(f"Invalid command: {command}")
+        return
+
+    response = session.post(url, json=payload, timeout=5)
+    if response.status_code == 200:
+        print(f"{command} {parameter} command sent successfully.")
+    else:
+        print(f"Failed to send {command} {parameter} command.")
+
 def apply_camera_movement(token, session, movement):
-    if movement["type"] == "move_to_marker":
-        set_ptz_preset(token, session, movement["marker_id"])
+    """
+    Applies the specified camera movement using the camera's API with speed and duration.
+    
+    Parameters:
+    - token: The authentication token for the camera API
+    - session: The HTTP session object with the token
+    - movement: A dictionary containing type, speed, duration, and optionally marker_id
+    """
+    movement_type = movement.get("type")
+    speed = movement.get("speed", 32)  # Default speed
+    duration = movement.get("duration", 1.0)  # Default duration
+
+    # Execute the movement command based on the movement type
+    if movement_type == 'pan_left':
+        send_ptz_command(token, session, "PtzCtrl", "Left", speed=speed)
+    elif movement_type == 'pan_right':
+        send_ptz_command(token, session, "PtzCtrl", "Right", speed=speed)
+    elif movement_type == 'tilt_up':
+        send_ptz_command(token, session, "PtzCtrl", "Up", speed=speed)
+    elif movement_type == 'tilt_down':
+        send_ptz_command(token, session, "PtzCtrl", "Down", speed=speed)
+    elif movement_type == 'zoom_in':
+        send_ptz_command(token, session, "PtzCtrl", "ZoomInc", speed=speed)
+    elif movement_type == 'zoom_out':
+        send_ptz_command(token, session, "PtzCtrl", "ZoomDec", speed=speed)
+    elif movement_type == 'move_to_marker':
+        marker_id = movement.get("marker_id", 0)
+        send_ptz_command(token, session, "PtzCtrl", "ToPos", id=marker_id, speed=speed)
+    else:
+        print(f"Invalid movement type: {movement_type}")
+        return
+
+    # Hold movement for the specified duration, then stop
+    time.sleep(duration)
+    send_ptz_command(token, session, "PtzCtrl", "Stop")
 
 def resize_frame_to_fit(frame, width, height):
     """Resize frame to fit specified width and height, maintaining aspect ratio."""

@@ -18,7 +18,7 @@ programmes:
             mode: "fullscreen_0"
             duration: 15
           - action: "camera_move"
-            type: "tilt_up"
+            type: "tilt_down"
             speed: 20
             duration: 2.0
           - action: "camera_move"
