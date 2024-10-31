@@ -1,0 +1,76 @@
+programmes:
+  - name: "Morning Programme"
+    start_time: "04:30"
+    end_time: "08:45"
+    events:
+      - name: "Mangala Aarti"
+        start_time: "04:30"
+        end_time: "04:55"
+        actions:
+          - action: "video_mode"
+            mode: "dual_0_topleft"
+            duration: 10
+          - action: "camera_move"
+            type: "pan_left"
+            speed: 25
+            duration: 1.5
+          - action: "video_mode"
+            mode: "fullscreen_0"
+            duration: 15
+          - action: "camera_move"
+            type: "tilt_up"
+            speed: 20
+            duration: 2.0
+          - action: "camera_move"
+            type: "zoom_in"
+            speed: 10
+            duration: 1.5
+          - action: "camera_move"
+            type: "move_to_marker"
+            marker_id: 1
+            speed: 15
+            duration: 1.0
+          - action: "video_mode"
+            mode: "fullscreen_1"
+            duration: 20
+
+      - name: "Tulsi Aarti"
+        start_time: "04:55"
+        end_time: "05:15"
+        actions:
+          - action: "video_mode"
+            mode: "dual_0_topleft"
+            duration: 10
+          - action: "camera_move"
+            type: "move_to_marker"
+            marker_id: 1
+            speed: 20
+            duration: 1.5
+
+  - name: "Lunch Programme"
+    start_time: "12:00"
+    end_time: "13:00"
+    events:
+      - name: "Pre-Lunch Bhajan"
+        start_time: "12:00"
+        end_time: "12:15"
+        actions:
+          - action: "video_mode"
+            mode: "fullscreen_1"
+            duration: 5
+          - action: "camera_move"
+            type: "tilt_down"
+            speed: 15
+            duration: 1.5
+
+      - name: "Prayers"
+        start_time: "12:15"
+        end_time: "12:30"
+        actions:
+          - action: "camera_move"
+            type: "pan_right"
+            speed: 25
+            duration: 2.0
+          - action: "video_mode"
+            mode: "dual_0_topleft"
+            duration: 7
