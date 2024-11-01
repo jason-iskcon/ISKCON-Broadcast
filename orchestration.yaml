@@ -18,18 +18,25 @@ programmes:
             mode: "fullscreen_0"
             duration: 15
           - action: "camera_move"
+            type: "move_to_marker"
+            marker_id: Deities
+            speed: 15
+          - action: "camera_move"
             type: "tilt_down"
             speed: 20
-            duration: 2.0
+            duration: 1.0
           - action: "camera_move"
             type: "zoom_in"
             speed: 10
             duration: 1.5
           - action: "camera_move"
-            type: "move_to_marker"
-            marker_id: 1
-            speed: 15
+            type: "tilt_up"
+            speed: 20
             duration: 1.0
+          - action: "camera_move"
+            type: "zoom_out"
+            speed: 10
+            duration: 1.5
           - action: "video_mode"
             mode: "fullscreen_1"
             duration: 20

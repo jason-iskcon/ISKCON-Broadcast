@@ -58,7 +58,7 @@ def send_ptz_command(token, session, command, parameter, speed=32, id=0):
             payload = [{"cmd": command, "action": 0, "param": {"channel": 0, "op": parameter, "speed": speed}}]
         elif parameter == "Stop":
             payload = [{"cmd": command, "action": 0, "param": {"channel": 0, "op": "Stop"}}]
-        elif parameter == "ToPos" and id > 0:
+        elif parameter == "ToPos":
             payload = [{"cmd": command, "action": 0, "param": {"channel": 0, "id": id, "op": parameter, "speed": speed}}]
         else:
             print(f"Invalid parameter for command {command}")
