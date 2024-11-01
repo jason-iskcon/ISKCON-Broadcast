@@ -1,27 +1,42 @@
-background_image: 'assets/class_background.png'
-sources:
-  - url: 0
-#  - url: 'rtsp://admin:Gaura108@192.168.86.215/11'
-  - url: 'rtsp://admin:Gaura108@192.168.87.76:554/h264Preview_01_main'
+background_image: 'assets/default_background.png'
+cameras:
+  - id: 0
+    rtsp_url: 'rtsp://admin:Gaura108@192.168.87.76:554/h264Preview_01_main'
+    https:
+      ip: '192.168.87.76'
+      username: 'admin'
+      password: 'Gaura108'
+  # - id: 1
+  #   rtsp_url: 'rtsp://admin:Gaura108@192.168.87.77:554/h264Preview_01_main'
+  #   https:
+  #     ip: '192.168.87.77'
+  #     username: 'admin'
+  #     password: 'Gaura108'
+  # - id: 2
+  #   rtsp_url: 'rtsp://admin:Gaura108@192.168.87.78:554/h264Preview_01_main'
+  #   https:
+  #     ip: '192.168.87.78'
+  #     username: 'admin'
+  #     password: 'Gaura108'
 
 modes:
   dual_0_topleft:
     type: 'dual_view'
     pos0: [859, 483]
     pos1: [0, 0]
-    scale0: 33  # Scale as a percentage
-    scale1: 80  # Scale as a percentage
+    scale0: 33
+    scale1: 80
   dual_1_topleft:
     type: 'dual_view'
     pos0: [859, 483]
     pos1: [0, 0]
-    scale0: 33  # Scale as a percentage
-    scale1: 80  # Scale as a percentage
+    scale1: 33
+    scale0: 80
   fullscreen_0:
     type: 'fullscreen_0'
     pos: [0, 0]
-    scale: 100  # Full screen
+    scale: 100
   fullscreen_1:
     type: 'fullscreen_1'
     pos: [0, 0]
-    scale: 100  # Full screen
+    scale: 100
