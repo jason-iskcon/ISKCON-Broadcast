@@ -117,12 +117,8 @@ def resize_frame_to_fit(frame, width, height):
 def dual_capture_display(background, camera0, camera1, pos0, pos1, scale0, scale1, duration):
 
     logging.debug("Applying dual display")
-
     start_time = time.time()
-    logging.debug("start_time: {start_time}")
-    remaining_time = time.time() - start_time
-    logging.debug("remaining_time: {remaining_time}")
-    while (remaining_time) < duration:
+    while (time.time() - start_time) < duration:
 
         frame0 = camera0.get_frame()
         frame1 = camera1.get_frame()
@@ -148,12 +144,8 @@ def dual_capture_display(background, camera0, camera1, pos0, pos1, scale0, scale
 def fullscreen_display(background, camera, pos, scale, duration):
 
     logging.debug("Applying fullscreen display")
-
     start_time = time.time()
-    logging.debug("start_time: {start_time}")
-    remaining_time = time.time() - start_time
-    logging.debug("remaining_time: {remaining_time}")
-    while (remaining_time) < duration:
+    while (time.time() - start_time) < duration:
 
         frame = camera.get_frame()
         h, w = background.shape[:2]
@@ -195,17 +187,16 @@ def play_video(video_path, duration, background_image):
     cap = cv2.VideoCapture(video_path)
 
     start_time = time.time()
-    while time.time() - start_time < duration:
-
+    while cap.isOpened() and ((time.time() - start_time) < duration):
         ret, frame = cap.read()
         if not ret:
-            logging.warning("End of video reached before the specified duration.")
             break
-
         frame_resized = resize_frame_to_fit(frame, *background_image.shape[1::-1])
         display_frame = background_image.copy()
         display_frame[:frame_resized.shape[0], :frame_resized.shape[1]] = frame_resized
         cv2.imshow('Display', display_frame)
+        if cv2.waitKey(1) == ord('q'):
+            break
 
     cap.release()
     logging.info("Finished playing video.")
