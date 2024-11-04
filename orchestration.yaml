@@ -14,51 +14,55 @@ programmes:
             file: "assets/mangala_arati.mp4"
             duration: 60
           - action: "video_mode"
-            type: "dual_view"
-            mode: "dual_0_topleft"
-            duration: 60
-          - action: "camera_move"
-            type: "pan_left"
-            speed: 25
-            duration: 1.5
-          - action: "video_mode"
             type: "full_screen"
             mode: "fullscreen_0"
-            duration: 60
+            duration: 30
           - action: "camera_move"
-            type: "move_to_marker"
+            id: 0
+            type: "ToPos"
             marker_id: Deities
             speed: 15
           - action: "camera_move"
-            type: "tilt_down"
+            id: 0
+            type: "Down"
             speed: 20
             duration: 1.0
           - action: "camera_move"
-            type: "zoom_in"
+            id: 0
+            type: "ZoomInc"
             speed: 10
             duration: 1.5
           - action: "camera_move"
-            type: "tilt_up"
+            id: 0
+            type: "Up"
             speed: 20
             duration: 1.0
           - action: "camera_move"
-            type: "zoom_out"
+            id: 0
+            type: "ZoomDec"
             speed: 10
             duration: 1.5
           - action: "video_mode"
-            type: "full_screen"
-            mode: "fullscreen_1"
-            duration: 60
+            type: "dual_view"
+            mode: "dual_0_topleft"
+            duration: 40
+          - action: "camera_move"
+            id: 0
+            type: "Left"
+            speed: 25
+            duration: 1.5
 
       - name: "Tulsi Aarti"
         start_time: "04:55"
         end_time: "05:15"
         actions:
           - action: "video_mode"
+            type: "dual_mode"
             mode: "dual_0_topleft"
             duration: 60
           - action: "camera_move"
-            type: "move_to_marker"
+            id: 0
+            type: "ToPos"
             marker_id: Class
             speed: 20
             duration: 1.5
@@ -72,10 +76,12 @@ programmes:
         end_time: "12:15"
         actions:
           - action: "video_mode"
+            type: "full_screen"
             mode: "fullscreen_1"
             duration: 5
           - action: "camera_move"
-            type: "tilt_down"
+            id: 0
+            type: "Down"
             speed: 15
             duration: 1.5
 
@@ -84,9 +90,11 @@ programmes:
         end_time: "12:30"
         actions:
           - action: "camera_move"
-            type: "pan_right"
+            id: 0
+            type: "Right"
             speed: 25
             duration: 2.0
           - action: "video_mode"
+            type: "dual_mode"
             mode: "dual_0_topleft"
             duration: 7

@@ -33,6 +33,9 @@ class Camera:
         self.running = True
         self.cap = cv2.VideoCapture(rtsp_url)
 
+    def get_frame(self):
+        return self.frame
+        
     def get_token(self, retries=3, timeout=10, delay=2):
         """Attempt to retrieve an authentication token with retries."""
         url = f"{self.base_url}?cmd=Login"
@@ -69,12 +72,15 @@ class Camera:
     def send_ptz_command(self, command, parameter, speed=32, id=0):
         """Send a PTZ command to the camera with specified parameters."""
         url = f"{self.base_url}?cmd={command}&token={self.token}"
-        
+        logging.info(f"Sending command {command} {parameter} to camera {self.camera_id}.")
+
         if command == "PtzCtrl":
             if parameter in ["Left", "Right", "Up", "Down", "ZoomInc", "ZoomDec", "LeftUp", "LeftDown", "RightUp", "RightDown"]:
                 payload = [{"cmd": command, "action": 0, "param": {"channel": 0, "op": parameter, "speed": speed}}]
-            elif parameter == "ToPos" and id > 0:
+            elif parameter == "ToPos":
                 payload = [{"cmd": command, "action": 0, "param": {"channel": 0, "id": id, "op": parameter, "speed": speed}}]
+            elif parameter == "Stop":
+                payload = [{"cmd": command, "action": 0, "param": {"channel": 0, "id": id, "op": parameter}}]
             else:
                 logging.warning(f"Invalid parameter for command {command}")
                 return
@@ -84,6 +90,8 @@ class Camera:
                 logging.info(f"{command} {parameter} command sent successfully to camera {self.camera_id}.")
             else:
                 logging.error(f"Failed to send {command} {parameter} command to camera {self.camera_id}.")
+        else:
+            logging.warning(f"Only PtzCtrl commands handled currently")
     
     def capture_frames(self):
         """Continuously capture frames from the RTSP stream."""
@@ -105,29 +113,60 @@ def resize_frame_to_fit(frame, width, height):
     scaling_factor = min(width / original_width, height / original_height)
     return cv2.resize(frame, (int(original_width * scaling_factor), int(original_height * scaling_factor)), interpolation=cv2.INTER_AREA)
 
-def dual_capture_display(background, frame0, frame1, pos0, pos1, scale0, scale1):
-    h, w = background.shape[:2]
-    target_width0, target_height0 = int(w * scale0 / 100), int(h * scale0 / 100)
-    target_width1, target_height1 = int(w * scale1 / 100), int(h * scale1 / 100)
 
-    frame0_resized = resize_frame_to_fit(frame0, target_width0, target_height0)
-    frame1_resized = resize_frame_to_fit(frame1, target_width1, target_height1)
+def dual_capture_display(background, camera0, camera1, pos0, pos1, scale0, scale1, duration):
 
-    h0, w0 = frame0_resized.shape[:2]
-    h1, w1 = frame1_resized.shape[:2]
+    logging.debug("Applying dual display")
 
-    background[pos0[1]:pos0[1] + h0, pos0[0]:pos0[0] + w0] = frame0_resized
-    background[pos1[1]:pos1[1] + h1, pos1[0]:pos1[0] + w1] = frame1_resized
-    return background
+    start_time = time.time()
+    logging.debug("start_time: {start_time}")
+    remaining_time = time.time() - start_time
+    logging.debug("remaining_time: {remaining_time}")
+    while (remaining_time) < duration:
 
-def fullscreen_display(background, frame, pos, scale):
+        frame0 = camera0.get_frame()
+        frame1 = camera1.get_frame()
+        h, w = background.shape[:2]
+        target_width0, target_height0 = int(w * scale0 / 100), int(h * scale0 / 100)
+        target_width1, target_height1 = int(w * scale1 / 100), int(h * scale1 / 100)
+
+        frame0_resized = resize_frame_to_fit(frame0, target_width0, target_height0)
+        frame1_resized = resize_frame_to_fit(frame1, target_width1, target_height1)
+
+        h0, w0 = frame0_resized.shape[:2]
+        h1, w1 = frame1_resized.shape[:2]
+
+        background[pos0[1]:pos0[1] + h0, pos0[0]:pos0[0] + w0] = frame0_resized
+        background[pos1[1]:pos1[1] + h1, pos1[0]:pos1[0] + w1] = frame1_resized
+
+        cv2.imshow('Display', background)
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+    logging.info("Finished applying dual display.")
+
+def fullscreen_display(background, camera, pos, scale, duration):
+
     logging.debug("Applying fullscreen display")
-    h, w = background.shape[:2]
-    target_width, target_height = int(w * scale / 100), int(h * scale / 100)
-    frame_resized = resize_frame_to_fit(frame, target_width, target_height)
-    h_resized, w_resized = frame_resized.shape[:2]
-    background[pos[1]:pos[1] + h_resized, pos[0]:pos[0] + w_resized] = frame_resized
-    return background
+
+    start_time = time.time()
+    logging.debug("start_time: {start_time}")
+    remaining_time = time.time() - start_time
+    logging.debug("remaining_time: {remaining_time}")
+    while (remaining_time) < duration:
+
+        frame = camera.get_frame()
+        h, w = background.shape[:2]
+        target_width, target_height = int(w * scale / 100), int(h * scale / 100)
+        frame_resized = resize_frame_to_fit(frame, target_width, target_height)
+        h_resized, w_resized = frame_resized.shape[:2]
+        background[pos[1]:pos[1] + h_resized, pos[0]:pos[0] + w_resized] = frame_resized
+
+        cv2.imshow('Display', background)
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+    logging.info("Finished applying fullscreen display.")
 
 # Asynchronous action functions
 def play_audio_async(audio_path, duration):
@@ -145,27 +184,28 @@ def play_audio_async(audio_path, duration):
 
 def move_camera_async(camera, command, parameter, speed, id):
     """Move camera asynchronously."""
-    def _move_camera():
-        logging.info(f"Moving camera {camera.camera_id} with command {command}, parameter {parameter}, speed {speed}")
-        camera.send_ptz_command(command, parameter, speed=speed, id=id)
+    #def _move_camera():
+    logging.info(f"Moving camera {camera.camera_id} with command {command}, parameter {parameter}, speed {speed}")
+    camera.send_ptz_command(command, parameter, speed=speed, id=id)
     
-    threading.Thread(target=_move_camera).start()
+    #threading.Thread(target=_move_camera).start()
 
 def play_video(video_path, duration, background_image):
     logging.info(f"Playing video: {video_path} for duration: {duration} seconds")
     cap = cv2.VideoCapture(video_path)
-    start_time = time.time()
 
-    while cap.isOpened() and (time.time() - start_time) < duration:
+    start_time = time.time()
+    while time.time() - start_time < duration:
+
         ret, frame = cap.read()
         if not ret:
+            logging.warning("End of video reached before the specified duration.")
             break
+
         frame_resized = resize_frame_to_fit(frame, *background_image.shape[1::-1])
         display_frame = background_image.copy()
         display_frame[:frame_resized.shape[0], :frame_resized.shape[1]] = frame_resized
         cv2.imshow('Display', display_frame)
-        if cv2.waitKey(1) == ord('q'):
-            break
 
     cap.release()
     logging.info("Finished playing video.")
@@ -178,7 +218,10 @@ def execute_action(action, cameras):
         camera_id = action.get("camera_id", 0)
         camera = next((cam for cam in cameras if cam.camera_id == camera_id), None)
         if camera:
-            move_camera_async(camera, action["type"], action.get("parameter", ""), action.get("speed", 32), action.get("marker_id", 0))
+            logging.info(f"Executing move_camera_async: {action_type}")
+            move_camera_async(camera, "PtzCtrl", action.get("type", ""), action.get("speed", 32), action.get("marker_id", camera_id))
+            time.sleep(action.get("duration", 0))
+            move_camera_async(camera, "PtzCtrl", "Stop", 32, camera_id)
         else:
             logging.warning(f"Camera with ID {camera_id} not found for action {action}")
     else:
@@ -215,24 +258,35 @@ def main(mode_config_file='mode_config.yaml', schedule_file='orchestration.yaml'
                         logging.info(f"Executing event: {event['name']}")
                         for action in event["actions"]:
                             logging.debug(f"Processing action: {action['action']}")
+                            
                             if action['action'] == 'video_mode':
                                 mode_settings = mode_config['modes'].get(action['mode'])
-                                if mode_settings['type'] == 'dual_view' and len(cameras) >= 2:
-                                    display_frame = dual_capture_display(
-                                        display_frame, cameras[0].frame, cameras[1].frame,
-                                        tuple(mode_settings['pos0']), tuple(mode_settings['pos1']),
-                                        mode_settings['scale0'], mode_settings['scale1']
-                                    )
+
+                                if mode_settings['type'] == 'dual_view':
+                                    if len(cameras) >= 2:
+                                        dual_capture_display(
+                                            display_frame, cameras[0], cameras[1],
+                                            tuple(mode_settings['pos0']), tuple(mode_settings['pos1']),
+                                            mode_settings['scale0'], mode_settings['scale1'],
+                                            action['duration']
+                                        )
+                                    else:
+                                        logging.warning(f"Only one camera working")
+
                                 elif mode_settings['type'] == 'fullscreen_0':
                                     if cameras[0].frame is not None:
-                                        display_frame = fullscreen_display(display_frame, cameras[0].frame, tuple(mode_settings['pos']), mode_settings['scale'])
-                                elif mode_settings['type'] == 'fullscreen_1' and len(cameras) > 1:
-                                    if cameras[1].frame is not None:
-                                        display_frame = fullscreen_display(display_frame, cameras[1].frame, tuple(mode_settings['pos']), mode_settings['scale'])
-                                    
-                                cv2.imshow('Display', display_frame)
-                                if cv2.waitKey(1) == ord('q'):
-                                    return  # Exit on 'q' key press
+                                        fullscreen_display(display_frame, cameras[0], tuple(mode_settings['pos']), mode_settings['scale'], action['duration'])
+                                    else:
+                                        logging.warning(f"Camera has no available frame")
+
+                                elif mode_settings['type'] == 'fullscreen_1':
+                                    if len(cameras) > 1:
+                                        if cameras[1].frame is not None:
+                                            fullscreen_display(display_frame, cameras[1], tuple(mode_settings['pos']), mode_settings['scale'], action['duration'])
+                                        else:
+                                            logging.warning(f"Camera has no available frame")
+                                    else:
+                                        logging.warning(f"Only one camera working")
 
                             elif action['action'] == "play_video":
                                 play_video(f"{action['file']}", action.get("duration", 10), background_image)
@@ -241,6 +295,7 @@ def main(mode_config_file='mode_config.yaml', schedule_file='orchestration.yaml'
                                 play_audio_async(f"{action['file']}", action.get("duration", 10))
 
                             else:
+                                # move_camera action
                                 execute_action(action, cameras)
     finally:
         for cam in cameras:
