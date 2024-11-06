@@ -33,10 +33,10 @@ modes:
     scale1: 33
     scale0: 80
   fullscreen_0:
-    type: 'fullscreen_0'
+    type: 'full_screen'
     pos: [0, 0]
     scale: 100
   fullscreen_1:
-    type: 'fullscreen_1'
+    type: 'full_screen'
     pos: [0, 0]
     scale: 100

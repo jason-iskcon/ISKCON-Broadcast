@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import argparse
 import pygame
 import logging
+from camera import Camera
 
 # Initialize logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] %(message)s')
@@ -18,93 +19,6 @@ pygame.mixer.init()
 def load_config(file_path):
     with open(file_path, 'r') as file:
         return yaml.safe_load(file)
-
-# Camera API Commands
-class Camera:
-    def __init__(self, camera_id, rtsp_url, ip, username, password):
-        self.camera_id = camera_id
-        self.rtsp_url = rtsp_url
-        self.ip = ip
-        self.username = username
-        self.password = password
-        self.base_url = f"https://{ip}/api.cgi"
-        self.token, self.session = self.get_token()
-        self.frame = None
-        self.running = True
-        self.cap = cv2.VideoCapture(rtsp_url)
-
-    def get_frame(self):
-        return self.frame
-        
-    def get_token(self, retries=3, timeout=10, delay=2):
-        """Attempt to retrieve an authentication token with retries."""
-        url = f"{self.base_url}?cmd=Login"
-        login_payload = [{
-            "cmd": "Login",
-            "param": {
-                "User": {
-                    "Version": "0",
-                    "userName": self.username,
-                    "password": self.password
-                }
-            }
-        }]
-        
-        for attempt in range(1, retries + 1):
-            session = requests.Session()
-            session.verify = False
-
-            try:
-                response = session.post(url, json=login_payload, timeout=timeout)
-                if response.status_code == 200 and response.json():
-                    token = response.json()[0]["value"]["Token"]["name"]
-                    logging.info(f"Token obtained for camera {self.camera_id} on attempt {attempt}")
-                    return token, session
-            except requests.RequestException as e:
-                logging.warning(f"Attempt {attempt} for camera {self.camera_id} failed: {e}")
-
-            if attempt < retries:
-                time.sleep(delay)
-        
-        logging.error(f"Failed to obtain token for camera {self.camera_id} after {retries} attempts.")
-        return None, None
-
-    def send_ptz_command(self, command, parameter, speed=32, id=0):
-        """Send a PTZ command to the camera with specified parameters."""
-        url = f"{self.base_url}?cmd={command}&token={self.token}"
-        logging.info(f"Sending command {command} {parameter} to camera {self.camera_id}.")
-
-        if command == "PtzCtrl":
-            if parameter in ["Left", "Right", "Up", "Down", "ZoomInc", "ZoomDec", "LeftUp", "LeftDown", "RightUp", "RightDown"]:
-                payload = [{"cmd": command, "action": 0, "param": {"channel": 0, "op": parameter, "speed": speed}}]
-            elif parameter == "ToPos":
-                payload = [{"cmd": command, "action": 0, "param": {"channel": 0, "id": id, "op": parameter, "speed": speed}}]
-            elif parameter == "Stop":
-                payload = [{"cmd": command, "action": 0, "param": {"channel": 0, "id": id, "op": parameter}}]
-            else:
-                logging.warning(f"Invalid parameter for command {command}")
-                return
-
-            response = self.session.post(url, json=payload, timeout=5)
-            if response.status_code == 200:
-                logging.info(f"{command} {parameter} command sent successfully to camera {self.camera_id}.")
-            else:
-                logging.error(f"Failed to send {command} {parameter} command to camera {self.camera_id}.")
-        else:
-            logging.warning(f"Only PtzCtrl commands handled currently")
-    
-    def capture_frames(self):
-        """Continuously capture frames from the RTSP stream."""
-        while self.running:
-            ret, self.frame = self.cap.read()
-            if not ret:
-                logging.warning(f"Camera {self.camera_id} failed to capture frame.")
-                break
-        self.cap.release()
-
-    def stop(self):
-        """Stop the camera capture."""
-        self.running = False
 
 # Display functions
 def resize_frame_to_fit(frame, width, height):
@@ -175,14 +89,12 @@ def play_audio_async(audio_path, duration):
     threading.Thread(target=_play_audio).start()
 
 def move_camera_async(camera, command, parameter, speed, id):
-    """Move camera asynchronously."""
-    #def _move_camera():
+
     logging.info(f"Moving camera {camera.camera_id} with command {command}, parameter {parameter}, speed {speed}")
-    camera.send_ptz_command(command, parameter, speed=speed, id=id)
-    
-    #threading.Thread(target=_move_camera).start()
+    camera.send_ptz_command(command, parameter, speed=speed, id=id)    
 
 def play_video(video_path, duration, background_image):
+
     logging.info(f"Playing video: {video_path} for duration: {duration} seconds")
     cap = cv2.VideoCapture(video_path)
 
@@ -201,25 +113,31 @@ def play_video(video_path, duration, background_image):
     cap.release()
     logging.info("Finished playing video.")
 
-def execute_action(action, cameras):
+def execute_camera_action(action, cameras):
+
     action_type = action["action"]
     logging.info(f"Executing action: {action_type}")
     
     if action_type == "camera_move":
-        camera_id = action.get("camera_id", 0)
+
+        camera_id = action.get("camera", 0)
         camera = next((cam for cam in cameras if cam.camera_id == camera_id), None)
+
         if camera:
             logging.info(f"Executing move_camera_async: {action_type}")
-            move_camera_async(camera, "PtzCtrl", action.get("type", ""), action.get("speed", 32), action.get("marker_id", camera_id))
+            move_camera_async(camera, "PtzCtrl", action.get("type", ""), action.get("speed", 32), action.get("marker", ""))
             time.sleep(action.get("duration", 0))
-            move_camera_async(camera, "PtzCtrl", "Stop", 32, camera_id)
+            move_camera_async(camera, "PtzCtrl", "Stop", 32, "")
+
         else:
             logging.warning(f"Camera with ID {camera_id} not found for action {action}")
     else:
         logging.warning(f"Unknown action type: {action_type}")
 
+
 # Main function
-def main(mode_config_file='mode_config.yaml', schedule_file='orchestration.yaml', debug_time=None):
+def VideoStreamHandler(mode_config_file='mode_config.yaml', schedule_file='orchestration.yaml', debug_time=None):
+
     mode_config = load_config(mode_config_file)
     schedule = load_config(schedule_file)
 
@@ -287,7 +205,7 @@ def main(mode_config_file='mode_config.yaml', schedule_file='orchestration.yaml'
 
                             else:
                                 # move_camera action
-                                execute_action(action, cameras)
+                                execute_camera_action(action, cameras)
     finally:
         for cam in cameras:
             cam.stop()
@@ -306,4 +224,4 @@ if __name__ == '__main__':
         except ValueError:
             logging.error("Invalid time format for --debug-time. Please use HH:MM.")
 
-    main(debug_time=debug_time)
+    VideoStreamHandler(debug_time=debug_time)

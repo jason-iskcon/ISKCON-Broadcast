@@ -7,47 +7,48 @@ programmes:
         start_time: "04:30"
         end_time: "04:55"
         actions:
-          - action: "play_audio"
-            file: "assets/flute_music.mp3"
-            duration: 60
           - action: "play_video"
             file: "assets/mangala_arati.mp4"
             duration: 60
+          - action: "play_audio"
+            file: "assets/flute_music.mp3"
+            duration: 30
           - action: "video_mode"
             type: "full_screen"
             mode: "fullscreen_0"
             duration: 30
           - action: "camera_move"
-            id: 0
+            camera: 0
             type: "ToPos"
-            marker_id: Deities
+            marker: Deities
             speed: 15
+            duration: 1
           - action: "camera_move"
-            id: 0
+            camera: 0
             type: "Down"
             speed: 20
             duration: 1.0
           - action: "camera_move"
-            id: 0
+            camera: 0
             type: "ZoomInc"
             speed: 10
             duration: 1.5
           - action: "camera_move"
-            id: 0
+            camera: 0
             type: "Up"
             speed: 20
             duration: 1.0
           - action: "camera_move"
-            id: 0
+            camera: 0
             type: "ZoomDec"
             speed: 10
             duration: 1.5
           - action: "video_mode"
-            type: "dual_view"
-            mode: "dual_0_topleft"
+            type: "full_screen"
+            mode: "fullscreen_0"
             duration: 40
           - action: "camera_move"
-            id: 0
+            camera: 0
             type: "Left"
             speed: 25
             duration: 1.5
@@ -57,13 +58,13 @@ programmes:
         end_time: "05:15"
         actions:
           - action: "video_mode"
-            type: "dual_mode"
-            mode: "dual_0_topleft"
+            type: "full_screen"
+            mode: "fullscreen_0"
             duration: 60
           - action: "camera_move"
-            id: 0
+            camera: 0
             type: "ToPos"
-            marker_id: Class
+            marker: Class
             speed: 20
             duration: 1.5
 
@@ -77,10 +78,10 @@ programmes:
         actions:
           - action: "video_mode"
             type: "full_screen"
-            mode: "fullscreen_1"
+            mode: "fullscreen_0"
             duration: 5
           - action: "camera_move"
-            id: 0
+            camera: 0
             type: "Down"
             speed: 15
             duration: 1.5
@@ -90,7 +91,7 @@ programmes:
         end_time: "12:30"
         actions:
           - action: "camera_move"
-            id: 0
+            camera: 0
             type: "Right"
             speed: 25
             duration: 2.0
