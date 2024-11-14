@@ -40,3 +40,10 @@ modes:
     type: 'full_screen'
     pos: [0, 0]
     scale: 100
+  left_column_right_main:
+    type: 'left_column_right_main'
+    pos_left_top: [0, 0]
+    pos_left_bottom: [0, 480]
+    pos_right: [500, 0]
+    scale_left: 32
+    scale_right: 60

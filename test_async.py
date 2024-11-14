@@ -8,6 +8,7 @@ import pygame
 import threading
 from collections import deque
 from camera import Camera
+from display_helpers import *
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -100,62 +101,40 @@ async def play_video(task, display_frame):
     cap.release()
     logging.info("Video playback ended.")
 
-def resize_frame_to_fit(frame, width, height):
-    """Resize frame to fit specified width and height, maintaining aspect ratio."""
-    original_height, original_width = frame.shape[:2]
-    scaling_factor = min(width / original_width, height / original_height)
-    return cv2.resize(frame, (int(original_width * scaling_factor), int(original_height * scaling_factor)), interpolation=cv2.INTER_AREA)
-
-def fullscreen_display(background, camera, pos, scale):
-    """Displays the camera feed in fullscreen mode."""
-    frame = camera.get_frame()
-    target_width, target_height = int(background.shape[1] * scale / 100), int(background.shape[0] * scale / 100)
-    frame_resized = resize_frame_to_fit(frame, target_width, target_height)
-    h_resized, w_resized = frame_resized.shape[:2]
-    background[pos[1]:pos[1] + h_resized, pos[0]:pos[0] + w_resized] = frame_resized
-    return background
-
-def dual_capture_display(background, camera0, camera1, pos0, pos1, scale0, scale1):
-    """Displays feeds from two cameras in a dual view mode."""
-    frame0 = camera0.get_frame()
-    frame1 = camera1.get_frame()
-    frame0_resized = resize_frame_to_fit(frame0, int(background.shape[1] * scale0 / 100), int(background.shape[0] * scale0 / 100))
-    frame1_resized = resize_frame_to_fit(frame1, int(background.shape[1] * scale1 / 100), int(background.shape[0] * scale1 / 100))
-    h0, w0 = frame0_resized.shape[:2]
-    h1, w1 = frame1_resized.shape[:2]
-    background[pos0[1]:pos0[1] + h0, pos0[0]:pos0[0] + w0] = frame0_resized
-    background[pos1[1]:pos1[1] + h1, pos1[0]:pos1[0] + w1] = frame1_resized
-    return background
 
 async def display_video_mode(task, camera_tasks):
-    """Displays the video mode with camera moves processed concurrently."""
     logging.info(f"Displaying video mode: {task['mode']} for {task['duration']} seconds")
     mode_settings = mode_config['modes'].get(task['mode'])
     duration = task['duration']
     end_time = time.time() + duration
     global display_frame
 
-    # Start processing the camera move queue sequentially
-    camera_move_task = asyncio.create_task(process_camera_move_queue())
-    
     while time.time() < end_time:
         # Apply display mode configurations
         if mode_settings['type'] == 'dual_view':
             display_frame = dual_capture_display(display_frame, cameras[0], cameras[1],
                                                  tuple(mode_settings['pos0']), tuple(mode_settings['pos1']),
                                                  mode_settings['scale0'], mode_settings['scale1'])
-        elif task['mode'] == 'fullscreen_0':
+        elif mode_settings['type'] == 'full_screen':
             display_frame = fullscreen_display(display_frame, cameras[0], tuple(mode_settings['pos']), mode_settings['scale'])
-        elif task['mode'] == 'fullscreen_1':
-            display_frame = fullscreen_display(display_frame, cameras[1], tuple(mode_settings['pos']), mode_settings['scale'])
+        elif mode_settings['type'] == 'left_column_right_main':
+            display_frame = left_column_right_main(
+                display_frame,
+                cameras[0],  # Camera for top left
+                cameras[0],  # Camera for bottom left
+                cameras[0],  # Camera for main right
+                tuple(mode_settings['pos_left_top']),
+                tuple(mode_settings['pos_left_bottom']),
+                tuple(mode_settings['pos_right']),
+                mode_settings['scale_left'],
+                mode_settings['scale_right']
+            )
 
         cv2.imshow('Display', display_frame)
         if cv2.waitKey(1) == ord('q'):
             break
         await asyncio.sleep(0.1)
 
-    # Wait for camera moves to complete
-    await camera_move_task
     cv2.destroyAllWindows()
     logging.info("Video mode display ended.")
 
@@ -163,7 +142,7 @@ async def action_dispatcher(actions):
     """Dispatches tasks for audio, video, video_mode, and camera_move actions."""
     video_task = None
     audio_task = None
-    video_mode_task = None
+    video_mode_tasks = []  # List to hold multiple video_mode tasks
 
     for action in actions:
         if action['action'] == 'play_audio':
@@ -171,11 +150,10 @@ async def action_dispatcher(actions):
         elif action['action'] == 'play_video':
             video_task = asyncio.create_task(play_video(action, display_frame))
         elif action['action'] == 'video_mode':
-            video_mode_task = action
+            video_mode_tasks.append(action)  # Add each video_mode action to the list
         elif action['action'] == 'camera_move':
-            # Queue camera move tasks, including a "Stop" task after each move
+            # Append only the command details (dict) for processing in the queue
             camera_move_queue.append(action)
-            camera_move_queue.append({"action": "camera_move", "type": "Stop", "duration": 0})
 
     # Run play_video and play_audio concurrently
     if video_task and audio_task:
@@ -185,9 +163,13 @@ async def action_dispatcher(actions):
     elif audio_task:
         await audio_task
 
-    # Now handle video_mode with queued camera moves
-    if video_mode_task:
-        await display_video_mode(video_mode_task, camera_move_queue)
+    # Process each video_mode action sequentially with queued camera moves
+    for video_mode_task in video_mode_tasks:
+        # Run video mode display concurrently with camera moves
+        await asyncio.gather(
+            display_video_mode(video_mode_task, list(camera_move_queue)),  # Pass a copy of camera tasks
+            process_camera_move_queue()  # Process camera moves sequentially in parallel
+        )
 
 async def main():
     """Main function to process all scheduled programmes and events."""
