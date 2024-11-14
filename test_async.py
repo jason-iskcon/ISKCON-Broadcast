@@ -6,6 +6,7 @@ import yaml
 import numpy as np
 import pygame
 import threading
+from collections import deque
 from camera import Camera
 
 # Initialize logging
@@ -33,14 +34,25 @@ display_frame = cv2.imread(mode_config['background_image'])
 # Initialize pygame for audio playback
 pygame.mixer.init()
 
+# Queue for storing camera move tasks
+camera_move_queue = deque()
+
 async def process_camera_move(task):
+    """Processes a single camera move."""
     logging.info(f"Processing camera move: {task}")
     cameras[0].send_ptz_command(command="PtzCtrl", parameter=task['type'], id=task.get('marker', 0))
     await asyncio.sleep(task['duration'])  # Simulate camera movement duration
+    logging.info("Processing camera move: STOP")
     cameras[0].send_ptz_command(command="PtzCtrl", parameter="Stop", id=0)
 
+async def process_camera_move_queue():
+    """Processes each camera move in the queue sequentially."""
+    while camera_move_queue:
+        task = camera_move_queue.popleft()  # Get the next task in the queue
+        await process_camera_move(task)  # Process the camera move
+
 async def play_audio(task):
-    """Play audio asynchronously using asyncio."""
+    """Plays audio for a specified duration."""
     logging.info(f"Playing audio: {task['file']} for {task['duration']} seconds")
     pygame.mixer.music.load(task['file'])
     pygame.mixer.music.play()
@@ -49,6 +61,7 @@ async def play_audio(task):
     logging.info("Audio playback ended.")
 
 async def play_video(task, display_frame):
+    """Plays video for a specified duration and updates the display frame."""
     video_file = task['file']
     duration = task['duration']
     logging.info(f"Starting video playback: {video_file} for {duration} seconds")
@@ -94,6 +107,7 @@ def resize_frame_to_fit(frame, width, height):
     return cv2.resize(frame, (int(original_width * scaling_factor), int(original_height * scaling_factor)), interpolation=cv2.INTER_AREA)
 
 def fullscreen_display(background, camera, pos, scale):
+    """Displays the camera feed in fullscreen mode."""
     frame = camera.get_frame()
     target_width, target_height = int(background.shape[1] * scale / 100), int(background.shape[0] * scale / 100)
     frame_resized = resize_frame_to_fit(frame, target_width, target_height)
@@ -102,6 +116,7 @@ def fullscreen_display(background, camera, pos, scale):
     return background
 
 def dual_capture_display(background, camera0, camera1, pos0, pos1, scale0, scale1):
+    """Displays feeds from two cameras in a dual view mode."""
     frame0 = camera0.get_frame()
     frame1 = camera1.get_frame()
     frame0_resized = resize_frame_to_fit(frame0, int(background.shape[1] * scale0 / 100), int(background.shape[0] * scale0 / 100))
@@ -113,12 +128,16 @@ def dual_capture_display(background, camera0, camera1, pos0, pos1, scale0, scale
     return background
 
 async def display_video_mode(task, camera_tasks):
+    """Displays the video mode with camera moves processed concurrently."""
     logging.info(f"Displaying video mode: {task['mode']} for {task['duration']} seconds")
     mode_settings = mode_config['modes'].get(task['mode'])
     duration = task['duration']
     end_time = time.time() + duration
     global display_frame
 
+    # Start processing the camera move queue sequentially
+    camera_move_task = asyncio.create_task(process_camera_move_queue())
+    
     while time.time() < end_time:
         # Apply display mode configurations
         if mode_settings['type'] == 'dual_view':
@@ -135,26 +154,16 @@ async def display_video_mode(task, camera_tasks):
             break
         await asyncio.sleep(0.1)
 
-    await asyncio.gather(*camera_tasks)
+    # Wait for camera moves to complete
+    await camera_move_task
     cv2.destroyAllWindows()
     logging.info("Video mode display ended.")
 
-async def process_action(task):
-    if task['action'] == 'camera_move':
-        await process_camera_move(task)
-    elif task['action'] == 'play_audio':
-        await play_audio(task)
-    elif task['action'] == 'play_video':
-        await play_video(task)
-    elif task['action'] == 'video_mode':
-        camera_tasks = [asyncio.create_task(process_camera_move(camera_move_task)) for camera_move_task in task.get("camera_moves", [])]
-        await display_video_mode(task, camera_tasks)
-
 async def action_dispatcher(actions):
+    """Dispatches tasks for audio, video, video_mode, and camera_move actions."""
     video_task = None
     audio_task = None
     video_mode_task = None
-    camera_move_tasks = []
 
     for action in actions:
         if action['action'] == 'play_audio':
@@ -164,7 +173,9 @@ async def action_dispatcher(actions):
         elif action['action'] == 'video_mode':
             video_mode_task = action
         elif action['action'] == 'camera_move':
-            camera_move_tasks.append(action)
+            # Queue camera move tasks, including a "Stop" task after each move
+            camera_move_queue.append(action)
+            camera_move_queue.append({"action": "camera_move", "type": "Stop", "duration": 0})
 
     # Run play_video and play_audio concurrently
     if video_task and audio_task:
@@ -174,11 +185,12 @@ async def action_dispatcher(actions):
     elif audio_task:
         await audio_task
 
-    # Now handle video_mode with camera moves
+    # Now handle video_mode with queued camera moves
     if video_mode_task:
-        await display_video_mode(video_mode_task, [asyncio.create_task(process_camera_move(task)) for task in camera_move_tasks])
+        await display_video_mode(video_mode_task, camera_move_queue)
 
 async def main():
+    """Main function to process all scheduled programmes and events."""
     for programme in schedule['programmes']:
         logging.info(f"Starting programme: {programme['name']}")
         for event in programme['events']:
