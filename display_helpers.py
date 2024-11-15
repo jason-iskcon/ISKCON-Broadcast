@@ -37,17 +37,108 @@ def fullscreen_display(background, camera, pos, scale):
     background[pos[1]:pos[1] + h_resized, pos[0]:pos[0] + w_resized] = frame_resized
     return background
 
-def dual_capture_display(background, camera0, camera1, pos0, pos1, scale0, scale1):
-    """Displays feeds from two cameras in a dual view mode."""
-    frame0 = camera0.get_frame()
-    frame1 = camera1.get_frame()
-    frame0_resized = resize_frame_to_fit(frame0, int(background.shape[1] * scale0 / 100), int(background.shape[0] * scale0 / 100))
-    frame1_resized = resize_frame_to_fit(frame1, int(background.shape[1] * scale1 / 100), int(background.shape[0] * scale1 / 100))
-    h0, w0 = frame0_resized.shape[:2]
-    h1, w1 = frame1_resized.shape[:2]
-    background[pos0[1]:pos0[1] + h0, pos0[0]:pos0[0] + w0] = frame0_resized
-    background[pos1[1]:pos1[1] + h1, pos1[0]:pos1[0] + w1] = frame1_resized
-    return background
+def dual_capture_display(
+    background, 
+    cameras, 
+    cam_top_left, 
+    pos_top_left, 
+    cam_bottom_right, 
+    pos_bottom_right, 
+    scale_top_left, 
+    scale_bottom_right
+):
+    """
+    Displays two camera views: one at the top-left and another at the bottom-right.
+
+    Parameters:
+    - background: Base image on which to overlay camera frames.
+    - cameras: Dictionary of camera objects.
+    - cam_top_left: Camera ID for the top-left view.
+    - pos_top_left: [x, y] position of the top-left view on the background.
+    - cam_bottom_right: Camera ID for the bottom-right view.
+    - pos_bottom_right: [x, y] position of the bottom-right view on the background.
+    - scale_top_left: Scale percentage for the top-left view.
+    - scale_bottom_right: Scale percentage for the bottom-right view.
+
+    Returns:
+    - Updated background with the camera views.
+    """
+    try:
+        # Capture frames from the specified cameras
+        frame_top_left = cameras[cam_top_left].get_frame()
+        frame_bottom_right = cameras[cam_bottom_right].get_frame()
+
+        # Calculate target dimensions for each frame
+        top_left_width = int(background.shape[1] * scale_top_left / 100)
+        top_left_height = int(background.shape[0] * scale_top_left / 100)
+        bottom_right_width = int(background.shape[1] * scale_bottom_right / 100)
+        bottom_right_height = int(background.shape[0] * scale_bottom_right / 100)
+
+        # Resize and crop frames while maintaining their aspect ratios
+        frame_top_left_resized = crop_and_resize(frame_top_left, top_left_width, top_left_height)
+        frame_bottom_right_resized = crop_and_resize(frame_bottom_right, bottom_right_width, bottom_right_height)
+
+        # Position the resized frames on the background
+        background[
+            pos_top_left[1]:pos_top_left[1] + top_left_height,
+            pos_top_left[0]:pos_top_left[0] + top_left_width
+        ] = frame_top_left_resized
+
+        background[
+            pos_bottom_right[1]:pos_bottom_right[1] + bottom_right_height,
+            pos_bottom_right[0]:pos_bottom_right[0] + bottom_right_width
+        ] = frame_bottom_right_resized
+
+        return background
+
+    except Exception as e:
+        logging.error(f"An error occurred in dual_view: {e}")
+        raise
+
+def crop_and_resize(frame, target_width, target_height):
+    """
+    Resize the frame to the target dimensions while maintaining aspect ratio.
+    Crop any excess parts to fit the target size.
+
+    Parameters:
+    - frame: Input frame to be resized and cropped.
+    - target_width: Desired width after resizing.
+    - target_height: Desired height after resizing.
+
+    Returns:
+    - The resized and cropped frame.
+    """
+    try:
+        # Get original dimensions
+        original_height, original_width = frame.shape[:2]
+
+        # Compute aspect ratios
+        aspect_ratio_original = original_width / original_height
+        aspect_ratio_target = target_width / target_height
+
+        # Resize while preserving aspect ratio
+        if aspect_ratio_original > aspect_ratio_target:
+            # Wider than target: match height and crop width
+            new_height = target_height
+            new_width = int(target_height * aspect_ratio_original)
+        else:
+            # Taller than target: match width and crop height
+            new_width = target_width
+            new_height = int(target_width / aspect_ratio_original)
+
+        frame_resized = cv2.resize(frame, (new_width, new_height))
+
+        # Crop to target dimensions
+        x_crop = (new_width - target_width) // 2
+        y_crop = (new_height - target_height) // 2
+
+        frame_cropped = frame_resized[y_crop:y_crop + target_height, x_crop:x_crop + target_width]
+
+        return frame_cropped
+
+    except Exception as e:
+        logging.error(f"Error in crop_and_resize: {e}")
+        raise
 
 def resize_and_crop(frame, target_width, target_height):
     """Resize the frame to fit the target dimensions while preserving the aspect ratio, and crop any excess."""

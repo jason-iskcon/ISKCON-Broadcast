@@ -110,31 +110,36 @@ async def display_video_mode(task, camera_tasks):
     duration = task['duration']
     end_time = time.time() + duration
     global display_frame
+    display_frame = cv2.imread(mode_config['background_image'])
 
     while time.time() < end_time:
         # Apply display mode configurations
         if mode_settings['type'] == 'dual_view':
-            display_frame = dual_capture_display(display_frame, cameras[0], cameras[1],
-                                                 tuple(mode_settings['pos0']), tuple(mode_settings['pos1']),
-                                                 mode_settings['scale0'], mode_settings['scale1'])
+            display_frame = dual_capture_display(
+                display_frame, 
+                cameras, 
+                mode_settings['cam_top_left'],
+                tuple(mode_settings['pos_top_left']), 
+                mode_settings['cam_bottom_right'],
+                tuple(mode_settings['pos_bottom_right']),
+                mode_settings['scale_top_left'], 
+                mode_settings['scale_bottom_right']
+            )
         elif mode_settings['type'] == 'full_screen':
             display_frame = fullscreen_display(display_frame, cameras[0], tuple(mode_settings['pos']), mode_settings['scale'])
         elif mode_settings['type'] == 'left_column_right_main':
-            try:
-                display_frame = left_column_right_main(
-                    display_frame,
-                    cameras,
-                    mode_settings['cam_left_top'],
-                    tuple(mode_settings['pos_left_top']),
-                    mode_settings['cam_left_bottom'],
-                    tuple(mode_settings['pos_left_bottom']),
-                    mode_settings['cam_right'],
-                    tuple(mode_settings['pos_right']),
-                    mode_settings['scale_left'],
-                    mode_settings['scale_right']
-                )
-            except Exception as e:
-                logging.error(f"An error occurred while processing the video layout: {e}")
+            display_frame = left_column_right_main(
+                display_frame,
+                cameras,
+                mode_settings['cam_left_top'],
+                tuple(mode_settings['pos_left_top']),
+                mode_settings['cam_left_bottom'],
+                tuple(mode_settings['pos_left_bottom']),
+                mode_settings['cam_right'],
+                tuple(mode_settings['pos_right']),
+                mode_settings['scale_left'],
+                mode_settings['scale_right']
+            )
 
         cv2.imshow('Display', display_frame)
         if cv2.waitKey(1) == ord('q'):

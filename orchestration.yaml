@@ -9,13 +9,13 @@ programmes:
         actions:
           - action: "play_video"
             file: "assets/mangala_arati.mp4"
-            duration: 60
+            duration: 10
           - action: "play_audio"
             file: "assets/flute_music.mp3"
-            duration: 30
+            duration: 10
           - action: "video_mode"
-            type: "left_column_right_main"
-            mode: "left_column_12_right_main_0"
+            type: "dual_mode"
+            mode: "dual_0_topleft_small_1_bottomright_large"
             duration: 30
           - action: "camera_move"
             camera: 0
@@ -97,5 +97,5 @@ programmes:
             duration: 2.0
           - action: "video_mode"
             type: "dual_mode"
-            mode: "dual_0_topleft"
-            duration: 7
+            mode: "dual_0_topleft_large_1_bottomright_small"
+            duration: 20

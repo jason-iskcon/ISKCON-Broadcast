@@ -20,18 +20,6 @@ cameras:
   #     password: 'Gaura108'
 
 modes:
-  dual_0_topleft:
-    type: 'dual_view'
-    pos0: [859, 483]
-    pos1: [0, 0]
-    scale0: 33
-    scale1: 80
-  dual_1_topleft:
-    type: 'dual_view'
-    pos0: [859, 483]
-    pos1: [0, 0]
-    scale1: 33
-    scale0: 80
   fullscreen_0:
     type: 'full_screen'
     pos: [0, 0]
@@ -40,6 +28,70 @@ modes:
     type: 'full_screen'
     pos: [0, 0]
     scale: 100
+  dual_0_topleft_small_1_bottomright_large:
+    type: 'dual_view'
+    cam_top_left: 0
+    pos_top_left: [0, 0]
+    cam_bottom_right: 0
+    pos_bottom_right: [768,432]
+    scale_top_left: 40
+    scale_bottom_right: 60
+  dual_0_topleft_large_1_bottomright_small:
+    type: 'dual_view'
+    cam_top_left: 0
+    pos_top_left: [0, 0]
+    cam_bottom_right: 0
+    pos_bottom_right: [1286,724]
+    scale_top_left: 67
+    scale_bottom_right: 33
+  dual_1_topleft_small_0_bottomright_large:
+    type: 'dual_view'
+    cam_top_left: 1
+    pos_top_left: [0, 0]
+    cam_bottom_right: 0
+    pos_bottom_right: [859, 483]
+    scale_top_left: 33
+    scale_bottom_right: 80
+  dual_1_topleft_large_0_bottomright_small:
+    type: 'dual_view'
+    cam_top_left: 1
+    pos_top_left: [0, 0]
+    cam_bottom_right: 0
+    pos_bottom_right: [859, 483]
+    scale_top_left: 80
+    scale_bottom_right: 33
+  dual_2_topleft_small_1_bottomright_large:
+    type: 'dual_view'
+    cam_top_left: 2
+    pos_top_left: [0, 0]
+    cam_bottom_right: 1
+    pos_bottom_right: [859, 483]
+    scale_top_left: 33
+    scale_bottom_right: 80
+  dual_2_topleft_large_1_bottomright_small:
+    type: 'dual_view'
+    cam_top_left: 2
+    pos_top_left: [0, 0]
+    cam_bottom_right: 1
+    pos_bottom_right: [859, 483]
+    scale_top_left: 80
+    scale_bottom_right: 33
+  dual_1_topleft_small_2_bottomright_large:
+    type: 'dual_view'
+    cam_top_left: 1
+    pos_top_left: [0, 0]
+    cam_bottom_right: 2
+    pos_bottom_right: [859, 483]
+    scale_top_left: 33
+    scale_bottom_right: 80
+  dual_1_topleft_large_2_bottomright_small:
+    type: 'dual_view'
+    cam_top_left: 1
+    pos_top_left: [0, 0]
+    cam_bottom_right: 2
+    pos_bottom_right: [859, 483]
+    scale_top_left: 80
+    scale_bottom_right: 33
   left_column_12_right_main_0:
     type: 'left_column_right_main'
     cam_left_top: 0
