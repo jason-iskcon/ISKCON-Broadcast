@@ -16,7 +16,7 @@ programmes:
           - action: "video_mode"
             type: "dual_mode"
             mode: "dual_0_topleft_small_1_bottomright_large"
-            duration: 30
+            duration: 20
           - action: "camera_move"
             camera: 0
             type: "ToPos"
@@ -25,9 +25,9 @@ programmes:
             duration: 1
           - action: "camera_move"
             camera: 0
-            type: "Down"
+            type: "Left"
             speed: 20
-            duration: 1.0
+            duration: 3.0
           - action: "camera_move"
             camera: 0
             type: "ZoomInc"
@@ -35,18 +35,22 @@ programmes:
             duration: 1.5
           - action: "camera_move"
             camera: 0
-            type: "Up"
+            type: "Right"
             speed: 20
-            duration: 1.0
+            duration: 3.0
           - action: "camera_move"
             camera: 0
             type: "ZoomDec"
             speed: 10
             duration: 1.5
           - action: "video_mode"
+            type: "left_column_right_main"
+            mode: "left_column_12_right_main_0"
+            duration: 10
+          - action: "video_mode"
             type: "full_screen"
             mode: "fullscreen_0"
-            duration: 40
+            duration: 10
           - action: "camera_move"
             camera: 0
             type: "Left"
