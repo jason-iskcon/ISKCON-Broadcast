@@ -5,7 +5,7 @@ import time
 import logging
 
 # Initialize logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
 class Camera:
     def __init__(self, camera_id, rtsp_url, ip, username, password):

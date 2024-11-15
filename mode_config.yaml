@@ -40,10 +40,63 @@ modes:
     type: 'full_screen'
     pos: [0, 0]
     scale: 100
-  left_column_right_main:
+  left_column_12_right_main_0:
     type: 'left_column_right_main'
+    cam_left_top: 0
     pos_left_top: [0, 0]
-    pos_left_bottom: [0, 480]
-    pos_right: [500, 0]
-    scale_left: 32
-    scale_right: 60
+    cam_left_bottom: 0
+    pos_left_bottom: [0, 540]
+    cam_right: 0
+    pos_right: [807, 0]
+    scale_left: 50
+    scale_right: 58
+  left_column_21_right_main_0:
+    type: 'left_column_right_main'
+    cam_left_top: 2
+    pos_left_top: [0, 0]
+    cam_left_bottom: 1
+    pos_left_bottom: [0, 540]
+    cam_right: 0
+    pos_right: [807, 0]
+    scale_left: 50
+    scale_right: 58
+  left_column_02_right_main_1:
+    type: 'left_column_right_main'
+    cam_left_top: 0
+    pos_left_top: [0, 0]
+    cam_left_bottom: 2
+    pos_left_bottom: [0, 540]
+    cam_right: 1
+    pos_right: [807, 0]
+    scale_left: 50
+    scale_right: 58
+  left_column_20_right_main_1:
+    type: 'left_column_right_main'
+    cam_left_top: 2
+    pos_left_top: [0, 0]
+    cam_left_bottom: 0
+    pos_left_bottom: [0, 540]
+    cam_right: 1
+    pos_right: [807, 0]
+    scale_left: 50
+    scale_right: 58
+  left_column_01_right_main_2:
+    type: 'left_column_right_main'
+    cam_left_top: 0
+    pos_left_top: [0, 0]
+    cam_left_bottom: 1
+    pos_left_bottom: [0, 540]
+    cam_right: 2
+    pos_right: [807, 0]
+    scale_left: 50
+    scale_right: 58
+  left_column_10_right_main_2:
+    type: 'left_column_right_main'
+    cam_left_top: 1
+    pos_left_top: [0, 0]
+    cam_left_bottom: 0
+    pos_left_bottom: [0, 540]
+    cam_right: 2
+    pos_right: [807, 0]
+    scale_left: 50
+    scale_right: 58

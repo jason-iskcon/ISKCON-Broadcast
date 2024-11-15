@@ -15,7 +15,7 @@ programmes:
             duration: 30
           - action: "video_mode"
             type: "left_column_right_main"
-            mode: "left_column_right_main"
+            mode: "left_column_12_right_main_0"
             duration: 30
           - action: "camera_move"
             camera: 0
@@ -44,8 +44,8 @@ programmes:
             speed: 10
             duration: 1.5
           - action: "video_mode"
-            type: "left_column_right_main"
-            mode: "left_column_right_main"
+            type: "full_screen"
+            mode: "fullscreen_0"
             duration: 40
           - action: "camera_move"
             camera: 0

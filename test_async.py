@@ -9,6 +9,9 @@ import threading
 from collections import deque
 from camera import Camera
 from display_helpers import *
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -43,7 +46,6 @@ async def process_camera_move(task):
     logging.info(f"Processing camera move: {task}")
     cameras[0].send_ptz_command(command="PtzCtrl", parameter=task['type'], id=task.get('marker', 0))
     await asyncio.sleep(task['duration'])  # Simulate camera movement duration
-    logging.info("Processing camera move: STOP")
     cameras[0].send_ptz_command(command="PtzCtrl", parameter="Stop", id=0)
 
 async def process_camera_move_queue():
@@ -118,17 +120,21 @@ async def display_video_mode(task, camera_tasks):
         elif mode_settings['type'] == 'full_screen':
             display_frame = fullscreen_display(display_frame, cameras[0], tuple(mode_settings['pos']), mode_settings['scale'])
         elif mode_settings['type'] == 'left_column_right_main':
-            display_frame = left_column_right_main(
-                display_frame,
-                cameras[0],  # Camera for top left
-                cameras[0],  # Camera for bottom left
-                cameras[0],  # Camera for main right
-                tuple(mode_settings['pos_left_top']),
-                tuple(mode_settings['pos_left_bottom']),
-                tuple(mode_settings['pos_right']),
-                mode_settings['scale_left'],
-                mode_settings['scale_right']
-            )
+            try:
+                display_frame = left_column_right_main(
+                    display_frame,
+                    cameras,
+                    mode_settings['cam_left_top'],
+                    tuple(mode_settings['pos_left_top']),
+                    mode_settings['cam_left_bottom'],
+                    tuple(mode_settings['pos_left_bottom']),
+                    mode_settings['cam_right'],
+                    tuple(mode_settings['pos_right']),
+                    mode_settings['scale_left'],
+                    mode_settings['scale_right']
+                )
+            except Exception as e:
+                logging.error(f"An error occurred while processing the video layout: {e}")
 
         cv2.imshow('Display', display_frame)
         if cv2.waitKey(1) == ord('q'):
