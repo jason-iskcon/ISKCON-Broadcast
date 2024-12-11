@@ -2,7 +2,7 @@
 
 The application orchestrates 1 or more cameras and outputs them into an opencv imshow composite output image.
 
-`code`
+```yaml
 programmes:
   - name: "Morning Programme"
     start_time: "04:30"
@@ -76,3 +76,4 @@ programmes:
             marker: Class
             speed: 20
             duration: 1.5
+```
