@@ -2,11 +2,26 @@
 
 The application orchestrates 1 or more cameras and outputs them into an opencv imshow composite output image.
 
+Run ISKCON broadcast program:
+
+From the command line:
+```bash
+python video_stream.py --debug-time 04:30
+```
+Configure ISKCON broadcast program:
+
+there are two main configuration files:
+
+* mode_config.yaml
+* orchestration.yaml
+
 * An *orchestration.yaml* consists of one or more *programmes*.
 * A *programme* (e.g. Morning Programme, Lunchtime Programme, etc.) comprises of a number of *events* (e.g. Mangala Aarti, Tulsi Aarti, etc).
 * An *event* comprises a number of *actions*, being the main programmable instruction set.
 * There are two primary types of action: *output* and *input*. Output actions change the OpenCV imshow written image. Input actions change the various OpenCM imread read images/streams.
 * 
+
+How 
 
 ```yaml
 programmes:
