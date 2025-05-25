@@ -1,24 +1,53 @@
-background_image: 'assets/default_background.png'
+background_image: '../assets/default_background.png'
 cameras:
+  # Mock camera with generated content
   - id: 0
-    type: 'ip_camera'
-    rtsp_url: 'rtsp://admin:Gaura108@192.168.87.76:554/h264Preview_01_main'
-    https:
-      ip: '192.168.87.76'
-      username: 'admin'
-      password: 'Gaura108'
-  # - id: 1
-  #   rtsp_url: 'rtsp://admin:Gaura108@192.168.87.77:554/h264Preview_01_main'
-  #   https:
-  #     ip: '192.168.87.77'
-  #     username: 'admin'
-  #     password: 'Gaura108'
-  # - id: 2
-  #   rtsp_url: 'rtsp://admin:Gaura108@192.168.87.78:554/h264Preview_01_main'
-  #   https:
-  #     ip: '192.168.87.78'
-  #     username: 'admin'
-  #     password: 'Gaura108'
+    type: 'mock'
+    source: 'generated'
+    fps: 30
+    width: 1920
+    height: 1080
+  
+  # Mock camera with video file (if available)
+  - id: 1
+    type: 'mock'
+    source: 'video'
+    video_path: '../assets/sample_video.mp4'
+    fps: 30
+    loop: true
+  
+  # Mock camera with webcam fallback
+  - id: 2
+    type: 'mock'
+    source: 'webcam'
+    webcam_index: 0
+    width: 1920
+    height: 1080
+    fps: 30
+
+# Production IP cameras (commented out for development)
+# cameras:
+#   - id: 0
+#     type: 'ip_camera'
+#     rtsp_url: 'rtsp://admin:Gaura108@192.168.87.76:554/h264Preview_01_main'
+#     https:
+#       ip: '192.168.87.76'
+#       username: 'admin'
+#       password: 'Gaura108'
+#   - id: 1
+#     type: 'ip_camera'
+#     rtsp_url: 'rtsp://admin:Gaura108@192.168.87.77:554/h264Preview_01_main'
+#     https:
+#       ip: '192.168.87.77'
+#       username: 'admin'
+#       password: 'Gaura108'
+#   - id: 2
+#     type: 'ip_camera'
+#     rtsp_url: 'rtsp://admin:Gaura108@192.168.87.78:554/h264Preview_01_main'
+#     https:
+#       ip: '192.168.87.78'
+#       username: 'admin'
+#       password: 'Gaura108'
 
 modes:
   fullscreen_0:
@@ -33,7 +62,7 @@ modes:
     type: 'dual_view'
     cam_top_left: 0
     pos_top_left: [0, 0]
-    cam_bottom_right: 0
+    cam_bottom_right: 1
     pos_bottom_right: [768,432]
     scale_top_left: 40
     scale_bottom_right: 60
@@ -41,7 +70,7 @@ modes:
     type: 'dual_view'
     cam_top_left: 0
     pos_top_left: [0, 0]
-    cam_bottom_right: 0
+    cam_bottom_right: 1
     pos_bottom_right: [1286,724]
     scale_top_left: 67
     scale_bottom_right: 33
@@ -95,9 +124,9 @@ modes:
     scale_bottom_right: 33
   left_column_12_right_main_0:
     type: 'left_column_right_main'
-    cam_left_top: 0
+    cam_left_top: 1
     pos_left_top: [0, 0]
-    cam_left_bottom: 0
+    cam_left_bottom: 2
     pos_left_bottom: [0, 540]
     cam_right: 0
     pos_right: [807, 0]
@@ -152,4 +181,4 @@ modes:
     cam_right: 2
     pos_right: [807, 0]
     scale_left: 50
-    scale_right: 58
+    scale_right: 58 

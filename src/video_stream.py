@@ -7,12 +7,17 @@ import numpy as np
 import pygame
 import threading
 from collections import deque
-from camera import Camera
+# Remove direct camera import - now using plugin system
+# from camera import Camera
 from display_helpers import *
 import urllib3
 import argparse
 from datetime import datetime
 import sys
+
+# Import camera plugin system
+from camera_registry import CameraRegistry, create_cameras_from_config
+import cameras  # This imports all camera plugins and registers them
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -28,12 +33,19 @@ schedule_file = 'orchestration.yaml'
 mode_config = load_config(mode_config_file)
 schedule = load_config(schedule_file)
 
-# Initialize cameras
-cameras = [Camera(i, cam['rtsp_url'], cam['https']['ip'], cam['https']['username'], cam['https']['password'])
-           for i, cam in enumerate(mode_config['cameras'])]
+# Initialize cameras using plugin system
+logging.info("Available camera types: %s", CameraRegistry.list_available_cameras())
 
+# Create cameras from configuration
+cameras = create_cameras_from_config(mode_config['cameras'])
+
+# Start camera capture threads
 for cam in cameras:
-    threading.Thread(target=cam.capture_frames).start()
+    try:
+        cam.capture_frames()
+        logging.info(f"Started capture for camera {cam.camera_id}: {cam}")
+    except Exception as e:
+        logging.error(f"Failed to start capture for camera {cam.camera_id}: {e}")
 
 # Load background image
 display_frame = cv2.imread(mode_config['background_image'])
@@ -47,9 +59,13 @@ camera_move_queue = deque()
 async def process_camera_move(task):
     """Processes a single camera move."""
     logging.info(f"Processing camera move: {task}")
-    cameras[0].send_ptz_command(command="PtzCtrl", parameter=task['type'], id=task.get('marker', 0))
+    if cameras:
+        success = cameras[0].send_ptz_command(command="PtzCtrl", parameter=task['type'], id=task.get('marker', 0))
+        if not success:
+            logging.warning(f"PTZ command failed for camera {cameras[0].camera_id}")
     await asyncio.sleep(task['duration'])  # Simulate camera movement duration
-    cameras[0].send_ptz_command(command="PtzCtrl", parameter="Stop", id=0)
+    if cameras:
+        cameras[0].send_ptz_command(command="PtzCtrl", parameter="Stop", id=0)
 
 async def process_camera_move_queue():
     """Processes each camera move in the queue sequentially."""
