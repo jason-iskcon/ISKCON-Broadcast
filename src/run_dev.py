@@ -20,19 +20,31 @@ logger = logging.getLogger(__name__)
 def setup_dev_environment():
     """Setup development environment by copying dev config"""
     
-    # Backup original config if it exists
+    # Backup original configs if they exist
     if os.path.exists('mode_config.yaml'):
         if not os.path.exists('mode_config_production.yaml'):
             shutil.copy('mode_config.yaml', 'mode_config_production.yaml')
-            logger.info("Backed up production config to mode_config_production.yaml")
+            logger.info("Backed up production mode config to mode_config_production.yaml")
     
-    # Copy dev config to main config
+    if os.path.exists('orchestration.yaml'):
+        if not os.path.exists('orchestration_production.yaml'):
+            shutil.copy('orchestration.yaml', 'orchestration_production.yaml')
+            logger.info("Backed up production orchestration config to orchestration_production.yaml")
+    
+    # Copy dev configs to main configs
     if os.path.exists('mode_config_dev.yaml'):
         shutil.copy('mode_config_dev.yaml', 'mode_config.yaml')
-        logger.info("Using development configuration (mock cameras)")
+        logger.info("Using development mode configuration (mock cameras)")
     else:
         logger.error("Development config file not found: mode_config_dev.yaml")
         return False
+    
+    if os.path.exists('orchestration_dev.yaml'):
+        shutil.copy('orchestration_dev.yaml', 'orchestration.yaml')
+        logger.info("Using development orchestration configuration")
+    else:
+        logger.warning("Development orchestration file not found: orchestration_dev.yaml")
+        logger.info("Using production orchestration configuration")
     
     return True
 
@@ -42,9 +54,15 @@ def restore_production_environment():
     
     if os.path.exists('mode_config_production.yaml'):
         shutil.copy('mode_config_production.yaml', 'mode_config.yaml')
-        logger.info("Restored production configuration")
+        logger.info("Restored production mode configuration")
     else:
-        logger.warning("No production config backup found")
+        logger.warning("No production mode config backup found")
+    
+    if os.path.exists('orchestration_production.yaml'):
+        shutil.copy('orchestration_production.yaml', 'orchestration.yaml')
+        logger.info("Restored production orchestration configuration")
+    else:
+        logger.warning("No production orchestration config backup found")
 
 
 def run_application(debug_time=None):
