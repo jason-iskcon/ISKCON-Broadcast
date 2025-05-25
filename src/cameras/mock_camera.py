@@ -13,8 +13,8 @@ import logging
 from typing import Optional, List
 import os
 
-from ..camera_interface import CameraInterface
-from ..camera_registry import register_camera
+from camera_interface import CameraInterface
+from camera_registry import register_camera
 
 logger = logging.getLogger(__name__)
 

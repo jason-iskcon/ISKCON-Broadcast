@@ -7,8 +7,8 @@ using the @register_camera decorator.
 """
 
 # Import all camera implementations to trigger registration
-from . import ip_camera
-from . import mock_camera
+import cameras.ip_camera
+import cameras.mock_camera
 
 # Make camera types available at package level
 __all__ = ['ip_camera', 'mock_camera'] 
