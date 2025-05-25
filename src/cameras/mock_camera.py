@@ -13,8 +13,8 @@ import logging
 from typing import Optional, List
 import os
 
-from camera_interface import CameraInterface
-from camera_registry import register_camera
+from src.camera_interface import CameraInterface
+from src.camera_registry import register_camera
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +141,11 @@ class MockCamera(CameraInterface):
     def get_frame(self) -> Optional[np.ndarray]:
         """Get current frame from mock camera"""
         return self.frame
+    
+    @property
+    def frame_count(self) -> int:
+        """Get the current frame count"""
+        return self._frame_count
     
     def send_ptz_command(self, command: str, parameter: str, id: int = 0) -> bool:
         """

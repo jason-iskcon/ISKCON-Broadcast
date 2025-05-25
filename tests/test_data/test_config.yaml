@@ -1,0 +1,30 @@
+background_image: test_background.png
+
+cameras:
+  - id: 0
+    type: mock
+    source: generated
+    fps: 30
+    width: 640
+    height: 480
+  - id: 1
+    type: mock
+    source: generated
+    fps: 30
+    width: 640
+    height: 480
+
+modes:
+  fullscreen_0:
+    type: full_screen
+    pos: [0, 0]
+    scale: 100
+  
+  dual_0_1:
+    type: dual_view
+    cam_top_left: 0
+    pos_top_left: [0, 0]
+    cam_bottom_right: 1
+    pos_bottom_right: [640, 360]
+    scale_top_left: 50
+    scale_bottom_right: 50 
