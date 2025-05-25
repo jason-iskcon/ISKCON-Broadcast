@@ -1,0 +1,75 @@
+codecov:
+  require_ci_to_pass: true
+  notify:
+    wait_for_ci: true
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+  
+  status:
+    project:
+      default:
+        target: 85%
+        threshold: 5%
+        informational: false
+      core:
+        target: 90%
+        paths:
+          - "src/video_stream.py"
+          - "src/camera_interface.py"
+          - "src/camera_registry.py"
+        informational: false
+      cameras:
+        target: 85%
+        paths:
+          - "src/cameras/"
+        informational: false
+      display:
+        target: 85%
+        paths:
+          - "src/display_helpers.py"
+        informational: false
+      utils:
+        target: 80%
+        paths:
+          - "src/test_cameras.py"
+          - "src/run_dev.py"
+        informational: false
+    
+    patch:
+      default:
+        target: 80%
+        threshold: 10%
+        informational: false
+
+  ignore:
+    - "tests/"
+    - "docs/"
+    - "utils/"
+    - "future/"
+    - "assets/"
+    - "src/**/__pycache__"
+    - "src/**/test_*.py"
+    - "src/demo_*.py"
+
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+  
+  branches:
+    - main
+    - develop
+
+flags:
+  unittests:
+    paths:
+      - src/
+    carryforward: true
+  
+github_checks:
+  annotations: true 
