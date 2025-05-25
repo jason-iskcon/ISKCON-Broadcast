@@ -1,7 +1,13 @@
 import cv2
 import logging
 import numpy as np
-import logging
+from display_constants import (
+    PERCENTAGE_DIVISOR,
+    ASPECT_RATIO_HEIGHT_FACTOR,
+    CROP_CENTER_DIVISOR,
+    calculate_scaled_dimensions,
+    get_center_crop_offset
+)
 
 def resize_frame_to_fit(frame, target_width, target_height):
     """Resize frame to fit the exact target dimensions."""
@@ -16,19 +22,20 @@ def fullscreen_display(background, camera, pos, scale):
     frame = camera.get_frame()
     
     # Target dimensions to fit the background scale
-    target_width = int(background.shape[1] * scale / 100)
-    target_height = int(background.shape[0] * scale / 100)
+    target_width, target_height = calculate_scaled_dimensions(
+        background.shape[1], background.shape[0], scale
+    )
     
     # Resize the frame to target width while maintaining the 4:3 aspect ratio
     resized_width = target_width
-    resized_height = int(target_width * (3 / 4))
+    resized_height = int(target_width * ASPECT_RATIO_HEIGHT_FACTOR)
 
     # Resize the frame to fit the target width with 4:3 ratio
     frame_resized = cv2.resize(frame, (resized_width, resized_height), interpolation=cv2.INTER_AREA)
 
     # Calculate cropping height to center the frame vertically on the background
     if resized_height > target_height:
-        crop_top = (resized_height - target_height) // 2
+        crop_top = get_center_crop_offset(resized_height, target_height)
         crop_bottom = crop_top + target_height
         frame_resized = frame_resized[crop_top:crop_bottom, :]
     
@@ -69,10 +76,12 @@ def dual_capture_display(
         frame_bottom_right = cameras[cam_bottom_right].get_frame()
 
         # Calculate target dimensions for each frame
-        top_left_width = int(background.shape[1] * scale_top_left / 100)
-        top_left_height = int(background.shape[0] * scale_top_left / 100)
-        bottom_right_width = int(background.shape[1] * scale_bottom_right / 100)
-        bottom_right_height = int(background.shape[0] * scale_bottom_right / 100)
+        top_left_width, top_left_height = calculate_scaled_dimensions(
+            background.shape[1], background.shape[0], scale_top_left
+        )
+        bottom_right_width, bottom_right_height = calculate_scaled_dimensions(
+            background.shape[1], background.shape[0], scale_bottom_right
+        )
 
         # Resize and crop frames while maintaining their aspect ratios
         frame_top_left_resized = crop_and_resize(frame_top_left, top_left_width, top_left_height)
@@ -129,8 +138,8 @@ def crop_and_resize(frame, target_width, target_height):
         frame_resized = cv2.resize(frame, (new_width, new_height))
 
         # Crop to target dimensions
-        x_crop = (new_width - target_width) // 2
-        y_crop = (new_height - target_height) // 2
+        x_crop = get_center_crop_offset(new_width, target_width)
+        y_crop = get_center_crop_offset(new_height, target_height)
 
         frame_cropped = frame_resized[y_crop:y_crop + target_height, x_crop:x_crop + target_width]
 
@@ -164,8 +173,8 @@ def resize_and_crop(frame, target_width, target_height):
     resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
     # Crop the resized frame to the target dimensions
-    start_x = (new_width - target_width) // 2 if new_width > target_width else 0
-    start_y = (new_height - target_height) // 2 if new_height > target_height else 0
+    start_x = get_center_crop_offset(new_width, target_width)
+    start_y = get_center_crop_offset(new_height, target_height)
     cropped_frame = resized_frame[start_y:start_y + target_height, start_x:start_x + target_width]
 
     return cropped_frame
@@ -203,9 +212,12 @@ def left_column_right_main(
     frame_right = cameras[cam_right].get_frame()
 
     # Calculate target dimensions based on scaling percentages
-    left_width = int(background.shape[1] * scale_left / 100)
-    left_height = int(background.shape[0] * scale_left / 100)
-    right_width = int(background.shape[1] * scale_right / 100)
+    left_width, left_height = calculate_scaled_dimensions(
+        background.shape[1], background.shape[0], scale_left
+    )
+    right_width, _ = calculate_scaled_dimensions(
+        background.shape[1], background.shape[0], scale_right
+    )
     right_height = background.shape[0]  # Full height for the right camera
 
     # Resize and crop frames to fit exactly within their designated areas

@@ -11,9 +11,9 @@ import logging
 from typing import Optional
 import numpy as np
 
-from src.camera_interface import CameraInterface
-from src.camera_registry import register_camera
-from src.camera import Camera  # Import the existing Camera class
+from ..camera_interface import CameraInterface
+from ..camera_registry import register_camera
+from ..camera import Camera  # Import the existing Camera class
 
 logger = logging.getLogger(__name__)
 

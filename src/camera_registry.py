@@ -8,7 +8,7 @@ and registration through decorators.
 
 from typing import Dict, Type, List
 import logging
-from src.camera_interface import CameraInterface
+from .camera_interface import CameraInterface
 
 logger = logging.getLogger(__name__)
 
