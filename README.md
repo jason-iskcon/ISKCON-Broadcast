@@ -2,13 +2,49 @@
 
 The application orchestrates 1 or more cameras and outputs them into an opencv imshow composite output image.
 
+## Repository Structure
+
+```
+ISKCON-Broadcast/
+├── src/                    # Main application code
+│   ├── video_stream.py     # Main application entry point
+│   ├── camera.py           # Camera control interface
+│   ├── display_helpers.py  # Display utility functions
+│   ├── mode_config.yaml    # Camera and display configuration
+│   └── orchestration.yaml  # Event scheduling configuration
+├── assets/                 # Media files (videos, audio, images)
+├── utils/                  # Utility scripts
+│   └── ffmpeg.sh          # FFmpeg streaming script
+├── future/                 # Experimental/development code
+│   ├── ball_tracking.py   # Ball tracking experiment
+│   ├── apple_tracking.py  # Apple tracking experiment
+│   └── face_recognition.py # Face recognition experiment
+├── requirements.txt        # Python dependencies
+└── features.md            # Development roadmap
+```
+
+## Installation
+
+1. **Install Python dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+2. **Configure cameras and display modes:**
+   - Edit `src/mode_config.yaml` for camera settings and display layouts
+   - Edit `src/orchestration.yaml` for event scheduling
+
+## Usage
+
 Run ISKCON broadcast program:
 
 From the command line:
 ```bash
+cd src
 python video_stream.py --debug-time 04:30
 ```
-Configure ISKCON broadcast program:
+
+## Configuration
 
 there are two main configuration files:
 

@@ -1,0 +1,28 @@
+# ISKCON-Broadcast Dependencies
+# Core computer vision and image processing
+opencv-python>=4.8.0
+
+# HTTP requests for camera API
+requests>=2.31.0
+
+# YAML configuration file parsing
+PyYAML>=6.0
+
+# Numerical computing
+numpy>=1.24.0
+
+# Audio playback
+pygame>=2.5.0
+
+# Disable SSL warnings (used in camera.py)
+urllib3>=2.0.0
+
+# Standard library modules (no installation needed):
+# - asyncio
+# - time
+# - logging
+# - threading
+# - collections
+# - argparse
+# - datetime
+# - sys 
